@@ -244,6 +244,7 @@ class WakaControlPanel(QMainWindow):
             self.ui.table_LiveData.insertRow(row)
             self.ui.table_LiveData.setItem(row, 0, QTableWidgetItem(key))
             self.ui.table_LiveData.setItem(row, 1, QTableWidgetItem(str(value)))
+        self.apply_safety_limits()
     
     def apply_safety_limits(self):
         capacitor_temp_limit = self.ui.spin_CapacitorTempLimit.value()

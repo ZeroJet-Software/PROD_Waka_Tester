@@ -1,15 +1,22 @@
-# This Python file uses the following encoding: utf-8
+""" Waka (or really any power unit) control GUI
+Runs a PySide6 GUI to control a power unit. 
+Uses threads to send torque requests at a 0.1s interval and get status at a 0.5s interval.
+"""
+# Disable pylint errors which are difficult to fix in this file
+# pylint: disable=missing-class-docstring missing-function-docstring too-few-public-methods line-too-long
 import sys
 from datetime import datetime
 import os
 import ctypes
 from ctypes import wintypes
 
+import nptdms # pylint: disable=import-error
+
 # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QTableWidgetItem, QHeaderView, QFileDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, \
+     QTableWidgetItem, QHeaderView, QFileDialog
 from PySide6.QtCore import QRunnable, QThreadPool, QTimer, QEventLoop
 from PySide6.QtCore import Slot, QObject, Signal
-import nptdms
 
 from modules.power_unit import power_unit
 # Important:
@@ -18,10 +25,10 @@ from modules.power_unit import power_unit
 #     pyside2-uic form.ui -o ui_form.py
 from ui_form import Ui_WakaControlPanel
 
-class connect_worker(QRunnable):
+class WorkerConnectToCANBus(QRunnable):
     class Signals(QObject):
         update_button_text = Signal(str)
-    
+
     def __init__(self, pu:power_unit, button:QPushButton, status:bool):
         super().__init__()
         self.power_unit = pu
@@ -29,7 +36,7 @@ class connect_worker(QRunnable):
         self.status = status
         self.signals = self.Signals()
         self.signals.update_button_text.connect(self.button.setText)
-    
+
     def run(self):
         print("Connect button clicked")
         if self.status:
@@ -108,7 +115,7 @@ class WakaControlPanel(QMainWindow):
         self.ui.setupUi(self)
         # Set default log folder and name
         default_log_folder = self.get_desktop_path() + "\\WakaLogs"
-        
+
         if not os.path.exists(default_log_folder):
             os.makedirs(default_log_folder)
         self.ui.text_LogFolder.setText(default_log_folder)
@@ -118,30 +125,29 @@ class WakaControlPanel(QMainWindow):
         self.ui.Button_On.clicked.connect(self.on_clicked)
         self.ui.Button_Off.clicked.connect(self.off_clicked)
         self.ui.Button_Connect.clicked.connect(self.connect_button_clicked)
-        
+
         self.ui.DoubleSpin_MaxTorque.valueChanged.connect(self.update_slider_bounds)
         self.ui.DoubleSpin_MinTorque.valueChanged.connect(self.update_slider_bounds)
-        
+
         self.ui.Slider_TorqueRequest.valueChanged.connect(self.update_torque_request)
         self.ui.DoubleSpin_CurrentTorque.valueChanged.connect(self.update_slider_from_spinbox)
-        
+
         self.torque_worker = TorqueWorker(self.power_unit, self.get_torque_value)
         self.torque_worker.signals.update_transmitting_status.connect(self.update_transmitting_status)
         self.torque_worker_thread = QThreadPool.globalInstance()
-        
+
         self.status_worker = StatusWorker(self.power_unit)
         self.status_worker.signals.update_status.connect(self.update_live_data)
         self.status_worker_thread = QThreadPool.globalInstance()
-        
+
         self.setup_live_data_table()
         self.ui.tool_LogBrowse.clicked.connect(self.open_log_folder_dialog)
         self.ui.button_StartLog.clicked.connect(self.handle_start_log)
 
     def get_desktop_path(self):
-        CSIDL_DESKTOP = 0x0000
-        SHGFP_TYPE_CURRENT = 0
+        # Chat GPT gave me this. No clue how it works. Just accept it and move on <3
         buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
-        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_DESKTOP, None, SHGFP_TYPE_CURRENT, buf)
+        ctypes.windll.shell32.SHGetFolderPathW(None, 0x0000, None, 0, buf)
         return buf.value
 
     def update_slider_bounds(self):
@@ -151,49 +157,49 @@ class WakaControlPanel(QMainWindow):
         self.ui.Slider_TorqueRequest.setMaximum(max_bounds * 1000)
         self.update_torque_request()
         print(f"Slider bounds updated: {min_bounds * 1000} - {max_bounds * 1000}")
-    
+
     def update_torque_request(self):
         torque = self.get_torque_value()
         self.ui.DoubleSpin_CurrentTorque.blockSignals(True)
         self.ui.DoubleSpin_CurrentTorque.setValue(torque)
         self.ui.DoubleSpin_CurrentTorque.blockSignals(False)
         self.power_unit.send_emdrive_torque_request(torque)
-    
+
     def get_torque_value(self) -> float:
         return self.ui.Slider_TorqueRequest.value() / 1000
-    
+
     def update_slider_from_spinbox(self):
         torque = self.ui.DoubleSpin_CurrentTorque.value()
         self.ui.Slider_TorqueRequest.setValue(torque * 1000)
         self.power_unit.send_emdrive_torque_request(torque)
-    
+
     @Slot()
     def operational_clicked(self):
         print("Operate button clicked")
         self.power_unit.send_emdrive_nmt_operational()
-    
+
     @Slot()
     def reset_clicked(self):
         print("Reset button clicked")
         self.power_unit.send_emdrive_nmt_reset()
-    
+
     @Slot()
     def on_clicked(self):
         print("On button clicked")
         self.power_unit.send_emdrive_on()
-    
+
     @Slot()
     def off_clicked(self):
         print("Off button clicked")
         self.power_unit.send_emdrive_off()
-    
+
     @Slot()
     def connect_button_clicked(self):
         pool = QThreadPool.globalInstance()
-        worker = connect_worker(self.power_unit, self.ui.Button_Connect, self.connected)
+        worker = WorkerConnectToCANBus(self.power_unit, self.ui.Button_Connect, self.connected)
         self.connected = not self.connected
         pool.start(worker)
-        
+
         if self.connected:
             self.torque_worker_thread.start(self.torque_worker)
             self.status_worker_thread.start(self.status_worker)
@@ -223,7 +229,7 @@ class WakaControlPanel(QMainWindow):
             test_time = (timestamp - self.log_start_time).total_seconds()
             channel_dt = nptdms.ChannelObject(group_name, "Test Time (s)", [test_time])
             self.ui.spin_LogTime.setValue(test_time/60)
-            
+
             tdms_writer.write_segment([nptdms.RootObject(), group, channel_dt])
             for key, value in data.items():
                 if value is not None:
@@ -245,12 +251,12 @@ class WakaControlPanel(QMainWindow):
             self.ui.table_LiveData.setItem(row, 0, QTableWidgetItem(key))
             self.ui.table_LiveData.setItem(row, 1, QTableWidgetItem(str(value)))
         self.apply_safety_limits()
-    
+
     def apply_safety_limits(self):
         capacitor_temp_limit = self.ui.spin_CapacitorTempLimit.value()
         motor_temp_limit = self.ui.spin_MotorTempLimit.value()
         rpm_limit_5s = self.ui.spin_RPMLimit_5s.value()
-        
+
         if 'capacitor_temp' in self.status_dict and self.status_dict['capacitor_temp'] > capacitor_temp_limit:
             self.power_unit.send_emdrive_off()
             print("Capacitor temperature exceeded limit, motor turned off")
@@ -264,20 +270,20 @@ class WakaControlPanel(QMainWindow):
                 print("RPM exceeded limit for 5 seconds, motor turned off")
         else:
             self.rpm_limit_triggers = 0
-        
+
         test_time = (datetime.now() - self.log_start_time).total_seconds()/60
-        
+
         if test_time > self.ui.spin_LogTime.value():
             self.power_unit.send_emdrive_off()
             print("Logging stopped")
 
-    def closeEvent(self, event):
+    def closeEvent(self, event): # pylint: disable=invalid-name
         self.set_torque_to_zero()
         self.power_unit.send_emdrive_off()
         self.power_unit.send_emdrive_nmt_reset()
         self.power_unit.disconnect()
         self.stop_logging()
-        
+
         try:
             del self.power_unit
         except AttributeError:
@@ -309,11 +315,10 @@ class WakaControlPanel(QMainWindow):
                 self.is_logging = True
                 self.ui.button_StartLog.setText("Stop")
                 self.ui.spin_LogTime.setValue(0)
-            except:
+            except: # pylint: disable=bare-except
                 self.ui.button_StartLog.setText("error")
         else:
             self.stop_logging()
-    
 
     def stop_logging(self):
         if self.tdms_writer:
@@ -322,7 +327,6 @@ class WakaControlPanel(QMainWindow):
         self.ui.button_StartLog.setText("Start Log")
 
 if __name__ == "__main__":
-    
     print("Please ensure you have installed the PEAK PCAN drivers")
     print("https://www.peak-system.com/quick/DrvSetup")
     app = QApplication(sys.argv)

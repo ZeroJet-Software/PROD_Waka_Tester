@@ -328,7 +328,10 @@ class Ui_WakaControlPanel(object):
         sizePolicy9.setHeightForWidth(self.Slider_TorqueRequest.sizePolicy().hasHeightForWidth())
         self.Slider_TorqueRequest.setSizePolicy(sizePolicy9)
         self.Slider_TorqueRequest.setMaximum(50000)
-        self.Slider_TorqueRequest.setTracking(False)
+        self.Slider_TorqueRequest.setSingleStep(100)
+        self.Slider_TorqueRequest.setPageStep(1000)
+        self.Slider_TorqueRequest.setValue(0)
+        self.Slider_TorqueRequest.setTracking(True)
         self.Slider_TorqueRequest.setOrientation(Qt.Orientation.Horizontal)
 
         self.gridLayout.addWidget(self.Slider_TorqueRequest, 3, 0, 2, 1)

@@ -106,7 +106,7 @@ class WakaControlPanel(QMainWindow):
     is_logging = False
     tdms_writer = None
     logfilepath: str
-    log_start_time: datetime
+    log_start_time: datetime = datetime.now()
     rpm_limit_triggers = 0
 
     def __init__(self, parent=None):
@@ -271,11 +271,13 @@ class WakaControlPanel(QMainWindow):
         else:
             self.rpm_limit_triggers = 0
 
-        test_time = (datetime.now() - self.log_start_time).total_seconds()/60
+        if self.is_logging and self.ui.spin_LogTimeLimit.value() > 0:
+            
+            test_time = (datetime.now() - self.log_start_time).total_seconds()/60
 
-        if test_time > self.ui.spin_LogTime.value():
-            self.power_unit.send_emdrive_off()
-            print("Logging stopped")
+            if test_time > self.ui.spin_LogTimeLimit.value():
+                self.power_unit.send_emdrive_off()
+                print(f"Logging stopped due to test time limit of {test_time:.2f} minutes being greater than {self.ui.spin_LogTimeLimit.value()} minutes")
 
     def closeEvent(self, event): # pylint: disable=invalid-name
         self.set_torque_to_zero()

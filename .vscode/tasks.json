@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Generate UI",
+            "type": "shell",
+            "command": "pyside6-uic form.ui -o ui_form.py",
+            "problemMatcher": []
+        }
+    ]
+}

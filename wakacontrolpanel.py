@@ -264,6 +264,12 @@ class WakaControlPanel(QMainWindow):
                 print("RPM exceeded limit for 5 seconds, motor turned off")
         else:
             self.rpm_limit_triggers = 0
+        
+        test_time = (datetime.now() - self.log_start_time).total_seconds()/60
+        
+        if test_time > self.ui.spin_LogTime.value():
+            self.power_unit.send_emdrive_off()
+            print("Logging stopped")
 
     def closeEvent(self, event):
         self.set_torque_to_zero()

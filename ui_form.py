@@ -18,8 +18,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDoubleSpinBox, QFrame,
     QGridLayout, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QMainWindow, QPushButton, QSizePolicy,
-    QSlider, QSpacerItem, QStatusBar, QTableWidget,
-    QTableWidgetItem, QToolButton, QVBoxLayout, QWidget)
+    QSlider, QSpacerItem, QSpinBox, QStatusBar,
+    QTableWidget, QTableWidgetItem, QToolButton, QVBoxLayout,
+    QWidget)
 
 class Ui_WakaControlPanel(object):
     def setupUi(self, WakaControlPanel):
@@ -63,12 +64,17 @@ class Ui_WakaControlPanel(object):
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.spin_MotorTempLimit = QDoubleSpinBox(self.frame)
-        self.spin_MotorTempLimit.setObjectName(u"spin_MotorTempLimit")
-        self.spin_MotorTempLimit.setMaximum(1000.000000000000000)
-        self.spin_MotorTempLimit.setValue(59.000000000000000)
+        self.spin_CapacitorTempLimit = QDoubleSpinBox(self.frame)
+        self.spin_CapacitorTempLimit.setObjectName(u"spin_CapacitorTempLimit")
+        self.spin_CapacitorTempLimit.setMaximum(1000.000000000000000)
+        self.spin_CapacitorTempLimit.setValue(120.000000000000000)
 
-        self.gridLayout_2.addWidget(self.spin_MotorTempLimit, 4, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.spin_CapacitorTempLimit, 5, 2, 1, 1)
+
+        self.label_6 = QLabel(self.frame)
+        self.label_6.setObjectName(u"label_6")
+
+        self.gridLayout_2.addWidget(self.label_6, 6, 1, 1, 1)
 
         self.label_5 = QLabel(self.frame)
         self.label_5.setObjectName(u"label_5")
@@ -80,12 +86,12 @@ class Ui_WakaControlPanel(object):
 
         self.gridLayout_2.addWidget(self.label_4, 4, 1, 1, 1)
 
-        self.spin_CapacitorTempLimit = QDoubleSpinBox(self.frame)
-        self.spin_CapacitorTempLimit.setObjectName(u"spin_CapacitorTempLimit")
-        self.spin_CapacitorTempLimit.setMaximum(1000.000000000000000)
-        self.spin_CapacitorTempLimit.setValue(120.000000000000000)
+        self.spin_MotorTempLimit = QDoubleSpinBox(self.frame)
+        self.spin_MotorTempLimit.setObjectName(u"spin_MotorTempLimit")
+        self.spin_MotorTempLimit.setMaximum(1000.000000000000000)
+        self.spin_MotorTempLimit.setValue(59.000000000000000)
 
-        self.gridLayout_2.addWidget(self.spin_CapacitorTempLimit, 5, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.spin_MotorTempLimit, 4, 2, 1, 1)
 
         self.spin_RPMLimit_5s = QDoubleSpinBox(self.frame)
         self.spin_RPMLimit_5s.setObjectName(u"spin_RPMLimit_5s")
@@ -94,10 +100,15 @@ class Ui_WakaControlPanel(object):
 
         self.gridLayout_2.addWidget(self.spin_RPMLimit_5s, 6, 2, 1, 1)
 
-        self.label_6 = QLabel(self.frame)
-        self.label_6.setObjectName(u"label_6")
+        self.label_9 = QLabel(self.frame)
+        self.label_9.setObjectName(u"label_9")
 
-        self.gridLayout_2.addWidget(self.label_6, 6, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.label_9, 7, 1, 1, 1)
+
+        self.spin_LogTimeLimit = QSpinBox(self.frame)
+        self.spin_LogTimeLimit.setObjectName(u"spin_LogTimeLimit")
+
+        self.gridLayout_2.addWidget(self.spin_LogTimeLimit, 7, 2, 1, 1)
 
 
         self.verticalLayout_2.addWidget(self.frame)
@@ -378,9 +389,10 @@ class Ui_WakaControlPanel(object):
     def retranslateUi(self, WakaControlPanel):
         WakaControlPanel.setWindowTitle(QCoreApplication.translate("WakaControlPanel", u"WakaControlPanel", None))
         self.Label_PCANStatus_3.setText(QCoreApplication.translate("WakaControlPanel", u"Limits", None))
+        self.label_6.setText(QCoreApplication.translate("WakaControlPanel", u"RPM limit (5s)", None))
         self.label_5.setText(QCoreApplication.translate("WakaControlPanel", u"Capacitor temp limit", None))
         self.label_4.setText(QCoreApplication.translate("WakaControlPanel", u"Motor temp limit", None))
-        self.label_6.setText(QCoreApplication.translate("WakaControlPanel", u"RPM limit (5s)", None))
+        self.label_9.setText(QCoreApplication.translate("WakaControlPanel", u"Log timer (minutes) ", None))
         self.Label_PCANStatus_4.setText(QCoreApplication.translate("WakaControlPanel", u"Log file folder", None))
         self.label_name.setText(QCoreApplication.translate("WakaControlPanel", u"Name", None))
         self.label_folder.setText(QCoreApplication.translate("WakaControlPanel", u"Folder", None))
